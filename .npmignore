@@ -1,0 +1,24 @@
+# Source files
+src/
+
+# Test files
+tests/
+jest.config.js
+
+# Configuration files
+tsconfig.json
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
