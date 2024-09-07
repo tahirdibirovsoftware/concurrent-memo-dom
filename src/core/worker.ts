@@ -38,7 +38,11 @@ if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof a
   addEventListener('message', (event: MessageEvent) => {
     const { fn, args } = event.data as { fn: string, args: any[] };
     const func = new Function('return ' + fn)() as WorkerFunction<any>;
-    const result = func(...args);
+
+    // Ensure args is always an array
+    const safeArgs = Array.isArray(args) ? args : [];
+
+    const result = func(...safeArgs);
     postMessage(result);
   });
 }

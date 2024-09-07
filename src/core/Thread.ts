@@ -26,10 +26,14 @@ export class Thread {
     }
 
     const worker = new WorkerWrapper();
-    const result = await worker.run(fn, ...args);
+
+    // Ensure args is always an array
+    const safeArgs = Array.isArray(args[0]) ? args[0] : args;
+
+    const result = await worker.run(fn, ...safeArgs);
 
     if (Thread.enableMemoization) {
-      Thread.cache.push({ args, result });
+      Thread.cache.push({ args: safeArgs, result });
     }
 
     return result;

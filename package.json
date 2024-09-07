@@ -1,6 +1,6 @@
 {
   "name": "concurrent-memo-dom",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "A browser library for concurrent computations with memoization, supporting React hooks and decorators",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
