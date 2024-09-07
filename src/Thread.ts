@@ -1,10 +1,10 @@
-import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ThreadOptions {
   enableCaching?: boolean;
   maxCacheSize?: number;
-  cacheTTL?: number; // Time to live for cache entries in milliseconds
+  cacheTTL?: number;
+  workerUrl?: string;
 }
 
 interface CacheEntry<T = any> {
@@ -19,11 +19,13 @@ export class Thread {
   private maxCacheSize: number;
   private cacheTTL: number;
   private worker: Worker | null = null;
+  private workerUrl: string;
 
   constructor(options: ThreadOptions = {}) {
     this.enableCaching = options.enableCaching ?? true;
     this.maxCacheSize = options.maxCacheSize ?? 100;
-    this.cacheTTL = options.cacheTTL ?? 60000; // Default 1 minute
+    this.cacheTTL = options.cacheTTL ?? 60000;
+    this.workerUrl = options.workerUrl ?? '/worker.js';
   }
 
   async exec<T>(fn: (...args: any[]) => T, ...args: any[]): Promise<T> {
@@ -34,40 +36,43 @@ export class Thread {
         return cachedEntry.result as T;
       }
     }
-  
+
     if (!this.worker) {
-      this.worker = new Worker(__filename, {
-        workerData: { type: 'worker' }
-      });
+      this.worker = new Worker(this.workerUrl);
     }
-  
+
     return new Promise<T>((resolve, reject) => {
       if (!this.worker) {
-        reject(new Error('Worker initialization failed'));
+        reject(new Error('Worker is not initialized'));
         return;
       }
-  
+
       const messageId = uuidv4();
-  
-      const messageHandler = (message: any) => {
+
+      const messageHandler = (event: MessageEvent) => {
+        const message = event.data;
         if (message.id === messageId) {
-          const result = message.result as T;
-          if (this.enableCaching) {
-            this.setCacheEntry(fn, args, result);
+          if (message.error) {
+            reject(new Error(message.error));
+          } else {
+            const result = message.result as T;
+            if (this.enableCaching) {
+              this.setCacheEntry(fn, args, result);
+            }
+            resolve(result);
           }
-          resolve(result);
-          this.worker?.removeListener('message', messageHandler);
+          this.worker?.removeEventListener('message', messageHandler);
         }
       };
-  
-      const errorHandler = (error: Error) => {
+
+      const errorHandler = (error: ErrorEvent) => {
         reject(error);
-        this.worker?.removeListener('error', errorHandler);
+        this.worker?.removeEventListener('error', errorHandler);
       };
-  
-      this.worker.on('message', messageHandler);
-      this.worker.on('error', errorHandler);
-  
+
+      this.worker.addEventListener('message', messageHandler);
+      this.worker.addEventListener('error', errorHandler);
+
       const serializedFn = this.serializeFunction(fn);
       this.worker.postMessage({ id: messageId, fn: serializedFn, args });
     });
@@ -116,17 +121,4 @@ export class Thread {
   private serializeFunction(fn: Function): string {
     return fn.toString();
   }
-}
-
-if (!isMainThread && workerData && workerData.type === 'worker') {
-  parentPort!.on('message', async (message) => {
-    const { id, fn, args } = message;
-    try {
-      const func = new Function(`return (${fn})`)();
-      const result = await func(...args);
-      parentPort!.postMessage({ id, result });
-    } catch (error) {
-      parentPort!.postMessage({ id, error: (error as Error).message });
-    }
-  });
 }

@@ -4,34 +4,35 @@ export interface ThreadPoolOptions extends ThreadOptions {
   size: number;
 }
 
-interface BusyThread extends Thread {
-  busy: boolean;
+type TaskFunction<T> = (...args: any[]) => T;
+
+interface QueueTask<T> {
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: any) => void;
+  fn: TaskFunction<T>;
+  args: any[];
 }
 
 export class ThreadPool {
   private size: number;
-  private threads: BusyThread[];
-  private queue: Array<{ resolve: (value: any) => void, reject: (reason?: any) => void, fn: (...args: any[]) => any, args: any[] }> = [];
+  private threads: Thread[];
+  private queue: QueueTask<any>[] = [];
 
   constructor(options: ThreadPoolOptions) {
     this.size = options.size;
-    this.threads = Array.from({ length: this.size }, () => {
-      const thread = new Thread(options) as BusyThread;
-      thread.busy = false;
-      return thread;
-    });
+    this.threads = Array.from({ length: this.size }, () => new Thread(options));
   }
 
-  async exec<T>(fn: (...args: any[]) => T, ...args: any[]): Promise<T> {
-    const availableThread = this.threads.find(thread => !thread.busy);
+  async exec<T>(fn: TaskFunction<T>, ...args: any[]): Promise<T> {
+    const availableThread = this.threads.find(thread => !(thread as any).busy);
 
     if (availableThread) {
-      availableThread.busy = true;
+      (availableThread as any).busy = true;
       try {
         const result = await availableThread.exec(fn, ...args);
         return result;
       } finally {
-        availableThread.busy = false;
+        (availableThread as any).busy = false;
         this.processQueue();
       }
     } else {
