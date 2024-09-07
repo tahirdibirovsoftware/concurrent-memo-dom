@@ -17,6 +17,7 @@ export class WorkerWrapper {
                 this.worker.removeEventListener('message', messageHandler);
                 this.worker.removeEventListener('error', errorHandler);
                 if ('error' in event.data) {
+                    console.error("Worker error:", event.data.error);
                     reject(new Error(event.data.error));
                 } else {
                     resolve(event.data.result);
@@ -24,6 +25,7 @@ export class WorkerWrapper {
             };
 
             const errorHandler = (error: ErrorEvent) => {
+                console.error("Worker error event:", error);
                 this.worker.removeEventListener('message', messageHandler);
                 this.worker.removeEventListener('error', errorHandler);
                 reject(error);
