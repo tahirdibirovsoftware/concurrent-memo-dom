@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Thread, ThreadOptions } from './Thread';
-import { ThreadPool, ThreadPoolOptions } from './ThreadPool';
+import { Thread, ThreadOptions } from './core/Thread';
+import { ThreadPool, ThreadPoolOptions } from './core/ThreadPool';
 
 export function useThread(options: ThreadOptions = {}) {
   const threadRef = useRef<Thread | null>(null);

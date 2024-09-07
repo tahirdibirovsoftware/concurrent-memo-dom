@@ -1,15 +1,6 @@
-# ConcurrentMemoDOM
+# Concurrent Memo DOM
 
-ConcurrentMemoDOM is a TypeScript library that brings multi-threading and memoization to your web applications, including React projects. It allows you to effortlessly run CPU-intensive tasks in parallel and automatically cache expensive computations.
-
-## Features
-
-- 🚀 Multi-threading support using Web Workers
-- 🧠 Automatic memoization of function results
-- 🧵 Thread pool for efficient task distribution
-- ⚛️ React hooks for easy integration with functional components
-- 🏗️ Decorator support for class-based architectures
-- 📦 Written in TypeScript for robust development
+Concurrent Memo DOM is a browser library for offloading heavy computations to web workers, enabling concurrent execution and improving application performance. It includes memoization by default and supports React hooks and decorators for Angular or non-framework projects.
 
 ## Installation
 
@@ -19,102 +10,105 @@ npm install concurrent-memo-dom
 
 ## Usage
 
-### Basic Usage
+### Basic Usage with Thread
 
 ```typescript
-import { Thread, ThreadPool } from 'concurrent-memo-dom';
+import { Thread } from 'concurrent-memo-dom';
 
-// Using a single thread
-const thread = new Thread({ workerUrl: '/path/to/worker.js' });
-const result = await thread.exec((x: number, y: number) => x + y, 5, 3);
-console.log(result); // 8
-
-// Using a thread pool
-const pool = new ThreadPool({ size: 4, workerUrl: '/path/to/worker.js' });
-const results = await Promise.all([
-  pool.exec((x: number) => x * 2, 5),
-  pool.exec((x: number) => x * 3, 5),
-  pool.exec((x: number) => x * 4, 5),
-]);
-console.log(results); // [10, 15, 20]
-```
-
-### React Hooks
-
-```tsx
-import React from 'react';
-import { useThread, useThreadPool } from 'concurrent-memo-dom';
-
-const MyComponent: React.FC = () => {
-  const { exec } = useThread({ workerUrl: '/path/to/worker.js' });
-  const result = await exec((x: number, y: number) => x + y, 5, 3);
-  
-  return <div>{result}</div>;
+const heavyComputation = (a: number, b: number) => {
+    // Simulating a heavy computation
+    let result = 0;
+    for (let i = 0; i < 1000000000; i++) {
+        result += Math.sqrt(a * b);
+    }
+    return result;
 };
+
+async function main() {
+    const result = await Thread.exec(heavyComputation, 2, 3);
+    console.log('Computation result:', result);
+}
+
+main();
 ```
 
-### Decorators
+### Using with React Hooks
 
 ```typescript
-import { Threaded, ThreadPooled } from 'concurrent-memo-dom';
+import React from 'react';
+import { useConcurrentMemo } from 'concurrent-memo-dom';
 
-class MyClass {
-  @Threaded({ workerUrl: '/path/to/worker.js' })
-  static async computeSingle(x: number, y: number): Promise<number> {
-    return x + y;
-  }
+function HeavyComponent({ a, b }) {
+    const result = useConcurrentMemo(() => {
+        // Heavy computation here
+        let sum = 0;
+        for (let i = 0; i < 1000000000; i++) {
+            sum += Math.sqrt(a * b);
+        }
+        return sum;
+    }, [a, b]);
 
-  @ThreadPooled({ size: 4, workerUrl: '/path/to/worker.js' })
-  static async computeMultiple(x: number): Promise<number[]> {
-    return [x * 2, x * 3, x * 4, x * 5];
-  }
+    return <div>Result: {result}</div>;
 }
 ```
 
-## API Reference
+### Using with Decorators (Angular or non-framework)
 
-### Thread
+```typescript
+import { ConcurrentMemo } from 'concurrent-memo-dom';
 
-- `constructor(options?: ThreadOptions)`
-- `exec<T>(fn: (...args: any[]) => T, ...args: any[]): Promise<T>`
-- `toggleCaching(enable: boolean): void`
-- `clearCache(): void`
-- `isCachingEnabled(): boolean`
-- `terminate(): void`
+class Calculator {
+    @ConcurrentMemo()
+    heavyComputation(a: number, b: number) {
+        // Heavy computation here
+        let result = 0;
+        for (let i = 0; i < 1000000000; i++) {
+            result += Math.sqrt(a * b);
+        }
+        return result;
+    }
+}
 
-### ThreadPool
+const calc = new Calculator();
+calc.heavyComputation(2, 3).then(result => console.log('Result:', result));
+```
 
-- `constructor(options: ThreadPoolOptions)`
-- `exec<T>(fn: (...args: any[]) => T, ...args: any[]): Promise<T>`
-- `toggleCaching(enable: boolean): void`
-- `clearCache(): void`
-- `isCachingEnabled(): boolean`
-- `terminate(): void`
+## API
 
-### Hooks
+### `Thread`
 
-- `useThread(options?: ThreadOptions)`
-- `useThreadPool(options: ThreadPoolOptions)`
+- `static exec<T>(fn: (...args: any[]) => T, ...args: any[]): Promise<T>`: Executes the provided function in a web worker with the given arguments and returns a promise that resolves with the result.
+- `static configure(options: { enableMemoization?: boolean }): void`: Configures the memoization behavior of the library.
 
-### Decorators
+### `ThreadPool`
 
-- `@Threaded(options?: ThreadOptions)`
-- `@ThreadPooled(options: ThreadPoolOptions)`
+- `constructor(options: { size: number, enableMemoization?: boolean })`: Creates a new thread pool with the specified size and optional memoization.
+- `exec<T>(fn: (...args: any[]) => T, ...args: any[]): Promise<T>`: Executes the provided function in a web worker from the pool with the given arguments and returns a promise that resolves with the result.
 
-## Important Notes
+### `useConcurrentMemo`
 
-- This library uses Web Workers, which require a separate worker file. Make sure to specify the correct `workerUrl` in the options.
-- Ensure your build process copies the worker file to the correct location in your output directory.
-- Functions passed to `exec` must be serializable. They can't close over variables from their outer scope.
+- `useConcurrentMemo<T>(fn: (...args: any[]) => T, deps: DependencyList): T | undefined`: React hook for memoized concurrent computations.
 
-## Browser Compatibility
+### `ConcurrentMemo`
 
-This library is designed for modern browsers that support Web Workers. Make sure to check browser compatibility before use.
+- `@ConcurrentMemo()`: Decorator for creating memoized concurrent methods.
+
+## Limitations
+
+1. Function Serialization: The library serializes functions to pass them to web workers. This means that closures and references to outer scope variables won't work as expected. Ensure your functions are self-contained or only rely on passed arguments.
+
+2. Data Cloning: Data passed to and from web workers is cloned using the structured clone algorithm. This means that functions, DOM nodes, and some types of objects (like those with circular references) cannot be passed directly.
+
+3. Global State: Web workers run in a separate global scope, so they don't have access to the main thread's global variables or the DOM.
+
+4. Browser Support: This library relies on Web Workers, which are supported in all modern browsers but not in older ones.
+
+5. React Hooks: The `useConcurrentMemo` hook may not work as expected with non-serializable values in the dependency array.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
