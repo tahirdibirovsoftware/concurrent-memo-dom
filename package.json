@@ -1,0 +1,31 @@
+{
+  "name": "concurrent-memo-dom",
+  "version": "1.0.0",
+  "description": "A thread pool library with memoization support for DOM operations",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": ["thread", "pool", "worker", "memoization", "dom", "concurrent"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "uuid": "^9.0.1"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.7",
+    "@types/node": "^20.8.10",
+    "@types/react": "^18.2.33",
+    "@types/uuid": "^9.0.6",
+    "jest": "^29.7.0",
+    "react": "^18.2.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  }
+}
