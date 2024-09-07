@@ -1,6 +1,15 @@
 # Concurrent Memo DOM
 
-Concurrent Memo DOM is a browser library for offloading heavy computations to web workers, enabling concurrent execution and improving application performance. It includes memoization by default and supports React hooks and decorators for Angular or non-framework projects.
+Concurrent Memo DOM is a powerful browser library for offloading heavy computations to web workers, enabling concurrent execution and improving application performance. It includes memoization by default and supports React hooks and decorators for Angular or non-framework projects.
+
+## Features
+
+- Concurrent execution of heavy computations using Web Workers
+- Built-in memoization for improved performance (can be disabled)
+- React hooks for easy integration with React applications
+- Decorators for use with Angular or non-framework projects
+- TypeScript support
+- Vite plugin for seamless integration with Vite projects
 
 ## Installation
 
@@ -73,6 +82,59 @@ const calc = new Calculator();
 calc.heavyComputation(2, 3).then(result => console.log('Result:', result));
 ```
 
+### Usage with ThreadPool
+
+```typescript
+import { ThreadPool } from 'concurrent-memo-dom';
+
+const pool = new ThreadPool({ size: 4, enableMemoization: true });
+
+const heavyComputation = (a: number, b: number) => {
+    // Heavy computation logic
+};
+
+async function main() {
+    const result = await pool.exec(heavyComputation, 2, 3);
+    console.log('Computation result:', result);
+}
+
+main();
+```
+
+### Configuring Memoization
+
+You can configure memoization globally:
+
+```typescript
+import { Thread } from 'concurrent-memo-dom';
+
+Thread.configure({ enableMemoization: false });
+```
+
+Or when creating a ThreadPool:
+
+```typescript
+const pool = new ThreadPool({ size: 4, enableMemoization: false });
+```
+
+## Usage with Vite
+
+If you're using Vite in your project, you can use our Vite plugin to ensure smooth integration:
+
+1. Add the plugin to your Vite configuration:
+
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite';
+import concurrentMemoDOMPlugin from 'concurrent-memo-dom/dist/vite-plugin-concurrent-memo-dom';
+
+export default defineConfig({
+  plugins: [concurrentMemoDOMPlugin()]
+});
+```
+
+This plugin will automatically handle the necessary configurations for Concurrent Memo DOM to work correctly with Vite.
+
 ## API
 
 ### `Thread`
@@ -95,9 +157,9 @@ calc.heavyComputation(2, 3).then(result => console.log('Result:', result));
 
 ## Limitations
 
-1. Function Serialization: The library serializes functions to pass them to web workers. This means that closures and references to outer scope variables won't work as expected. Ensure your functions are self-contained or only rely on passed arguments.
+1. Function Serialization: The library serializes functions to pass them to web workers. Closures and references to outer scope variables won't work as expected. Ensure your functions are self-contained or only rely on passed arguments.
 
-2. Data Cloning: Data passed to and from web workers is cloned using the structured clone algorithm. This means that functions, DOM nodes, and some types of objects (like those with circular references) cannot be passed directly.
+2. Data Cloning: Data passed to and from web workers is cloned using the structured clone algorithm. Functions, DOM nodes, and some types of objects (like those with circular references) cannot be passed directly.
 
 3. Global State: Web workers run in a separate global scope, so they don't have access to the main thread's global variables or the DOM.
 
@@ -107,8 +169,8 @@ calc.heavyComputation(2, 3).then(result => console.log('Result:', result));
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

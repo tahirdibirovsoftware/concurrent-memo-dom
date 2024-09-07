@@ -1,4 +1,8 @@
-type WorkerFunction<T> = (...args: any[]) => T;
+type WorkerMessage<T> = {
+  result: T;
+} | {
+  error: string;
+};
 
 export class WorkerWrapper {
   private worker: Worker;
@@ -7,12 +11,16 @@ export class WorkerWrapper {
     this.worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
   }
 
-  async run<T>(fn: WorkerFunction<T>, ...args: any[]): Promise<T> {
+  async run<T>(fnString: string, ...args: any[]): Promise<T> {
     return new Promise((resolve, reject) => {
-      const messageHandler = (event: MessageEvent) => {
+      const messageHandler = (event: MessageEvent<WorkerMessage<T>>) => {
         this.worker.removeEventListener('message', messageHandler);
         this.worker.removeEventListener('error', errorHandler);
-        resolve(event.data);
+        if ('error' in event.data) {
+          reject(new Error(event.data.error));
+        } else {
+          resolve(event.data.result);
+        }
       };
 
       const errorHandler = (error: ErrorEvent) => {
@@ -24,25 +32,31 @@ export class WorkerWrapper {
       this.worker.addEventListener('message', messageHandler);
       this.worker.addEventListener('error', errorHandler);
 
-      this.worker.postMessage({ fn: fn.toString(), args });
+      this.worker.postMessage({ fnString, args });
     });
   }
 }
 
-// This code will be in a separate worker.js file
-declare function postMessage(message: any): void;
-declare function addEventListener(type: 'message', listener: (event: MessageEvent) => void): void;
-
-// Check if we're in a worker context
+// Worker code (to be in a separate worker.js file)
 if (typeof self !== 'undefined' && typeof postMessage === 'function' && typeof addEventListener === 'function') {
   addEventListener('message', (event: MessageEvent) => {
-    const { fn, args } = event.data as { fn: string, args: any[] };
-    const func = new Function('return ' + fn)() as WorkerFunction<any>;
+    const { fnString, args } = event.data;
+    let func;
+    try {
+      func = new Function('return ' + fnString)();
+      if (typeof func !== 'function') {
+        throw new Error('Parsed value is not a function');
+      }
+    } catch (error) {
+      postMessage({ error: 'Failed to parse function' });
+      return;
+    }
 
-    // Ensure args is always an array
-    const safeArgs = Array.isArray(args) ? args : [];
-
-    const result = func(...safeArgs);
-    postMessage(result);
+    try {
+      const result = func(...args);
+      postMessage({ result });
+    } catch (error) {
+      postMessage({ error: 'Function execution failed' });
+    }
   });
 }

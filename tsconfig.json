@@ -2,20 +2,21 @@
   "compilerOptions": {
     "target": "ES2018",
     "module": "ESNext",
-    "lib": [
-      "ES2018",
-      "DOM"
-    ],
-    "declaration": true,
-    "outDir": "./dist",
-    "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "strict": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "types": [
+      "react",
+      "node",
+      "vite/client"
+    ]
   },
   "include": [
-    "src"
+    "src",
+    "vite-plugin-concurrent-memo-dom.ts"
   ],
   "exclude": [
     "node_modules",

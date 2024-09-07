@@ -1,6 +1,7 @@
 import { WorkerWrapper } from './worker';
 
 interface CacheEntry<T> {
+  fnString: string;
   args: any[];
   result: T;
 }
@@ -18,22 +19,24 @@ export class Thread {
   }
 
   static async exec<T>(fn: (...args: any[]) => T, ...args: any[]): Promise<T> {
+    const fnString = fn.toString();
+    const safeArgs = Array.isArray(args[0]) ? args[0] : args;
+
     if (Thread.enableMemoization) {
-      const cachedEntry = Thread.cache.find(entry => Thread.areArgsEqual(entry.args, args));
+      const cachedEntry = Thread.cache.find(entry =>
+        entry.fnString === fnString && Thread.areArgsEqual(entry.args, safeArgs)
+      ) as CacheEntry<T> | undefined;
+
       if (cachedEntry) {
         return cachedEntry.result;
       }
     }
 
     const worker = new WorkerWrapper();
-
-    // Ensure args is always an array
-    const safeArgs = Array.isArray(args[0]) ? args[0] : args;
-
-    const result = await worker.run(fn, ...safeArgs);
+    const result = await worker.run<T>(fnString, ...safeArgs);
 
     if (Thread.enableMemoization) {
-      Thread.cache.push({ args: safeArgs, result });
+      Thread.cache.push({ fnString, args: safeArgs, result });
     }
 
     return result;
