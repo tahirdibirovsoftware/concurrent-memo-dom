@@ -1,6 +1,6 @@
 # ConcurrentMemoDOM
 
-ConcurrentMemoDOM is a powerful TypeScript library that brings multi-threading and memoization to your web applications, including React projects. It allows you to effortlessly run CPU-intensive tasks in parallel and automatically cache expensive computations.
+ConcurrentMemoDOM is a TypeScript library that brings multi-threading and memoization to your web applications, including React projects. It allows you to effortlessly run CPU-intensive tasks in parallel and automatically cache expensive computations.
 
 ## Features
 
@@ -25,12 +25,12 @@ npm install concurrent-memo-dom
 import { Thread, ThreadPool } from 'concurrent-memo-dom';
 
 // Using a single thread
-const thread = new Thread();
+const thread = new Thread({ workerUrl: '/path/to/worker.js' });
 const result = await thread.exec((x: number, y: number) => x + y, 5, 3);
 console.log(result); // 8
 
 // Using a thread pool
-const pool = new ThreadPool({ size: 4 });
+const pool = new ThreadPool({ size: 4, workerUrl: '/path/to/worker.js' });
 const results = await Promise.all([
   pool.exec((x: number) => x * 2, 5),
   pool.exec((x: number) => x * 3, 5),
@@ -46,7 +46,7 @@ import React from 'react';
 import { useThread, useThreadPool } from 'concurrent-memo-dom';
 
 const MyComponent: React.FC = () => {
-  const { exec } = useThread();
+  const { exec } = useThread({ workerUrl: '/path/to/worker.js' });
   const result = await exec((x: number, y: number) => x + y, 5, 3);
   
   return <div>{result}</div>;
@@ -59,12 +59,12 @@ const MyComponent: React.FC = () => {
 import { Threaded, ThreadPooled } from 'concurrent-memo-dom';
 
 class MyClass {
-  @Threaded()
+  @Threaded({ workerUrl: '/path/to/worker.js' })
   static async computeSingle(x: number, y: number): Promise<number> {
     return x + y;
   }
 
-  @ThreadPooled({ size: 4 })
+  @ThreadPooled({ size: 4, workerUrl: '/path/to/worker.js' })
   static async computeMultiple(x: number): Promise<number[]> {
     return [x * 2, x * 3, x * 4, x * 5];
   }
@@ -101,39 +101,19 @@ class MyClass {
 - `@Threaded(options?: ThreadOptions)`
 - `@ThreadPooled(options: ThreadPoolOptions)`
 
-## Limitations
+## Important Notes
 
-1. **Browser Support**: This library uses Web Workers, which are not supported in older browsers. Check browser compatibility before use.
+- This library uses Web Workers, which require a separate worker file. Make sure to specify the correct `workerUrl` in the options.
+- Ensure your build process copies the worker file to the correct location in your output directory.
+- Functions passed to `exec` must be serializable. They can't close over variables from their outer scope.
 
-2. **Function Serialization**: Functions passed to `exec` must be serializable. This means they can't close over variables from their outer scope.
+## Browser Compatibility
 
-3. **DOM Access**: Web Workers don't have access to the DOM. Functions that need to manipulate the DOM directly cannot be executed in threads.
-
-4. **Shared State**: Each thread runs in its own isolated context. There's no shared state between threads, so all necessary data must be passed as arguments.
-
-5. **Error Handling**: Errors in worker threads are serialized and passed back to the main thread. Some error information might be lost in this process.
-
-6. **Performance Overhead**: For very quick operations, the overhead of creating a worker might outweigh the benefits of parallel execution.
-
-7. **Memory Usage**: Each worker comes with its own memory overhead. Creating too many threads might lead to high memory usage.
-
-## Best Practices
-
-1. Use threads for CPU-intensive tasks that don't require DOM access.
-2. Be mindful of the data size passed to threads. Large data transfers can impact performance.
-3. Use the thread pool for better resource management when you need to run multiple parallel tasks.
-4. Leverage memoization for expensive computations that are called frequently with the same arguments.
-5. Always terminate threads and thread pools when they're no longer needed to free up resources.
+This library is designed for modern browsers that support Web Workers. Make sure to check browser compatibility before use.
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## License
 

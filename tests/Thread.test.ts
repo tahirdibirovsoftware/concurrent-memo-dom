@@ -1,10 +1,31 @@
 import { Thread } from '../src/Thread';
 
+// Mock Web Worker
+class WorkerMock {
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  postMessage(data: any) {
+    if (this.onmessage) {
+      const result = eval(`(${data.fn})(${data.args.join(',')})`);
+      this.onmessage({ data: { id: data.id, result } } as MessageEvent);
+    }
+  }
+  addEventListener(type: string, listener: EventListener) {
+    if (type === 'message') {
+      this.onmessage = listener as (event: MessageEvent) => void;
+    }
+  }
+  removeEventListener() {}
+  terminate() {}
+}
+
+// Mock the global Worker constructor
+(global as any).Worker = WorkerMock;
+
 describe('Thread', () => {
   let thread: Thread;
 
   beforeEach(() => {
-    thread = new Thread();
+    thread = new Thread({ workerUrl: 'dummy-url' });
   });
 
   afterEach(() => {
