@@ -9,8 +9,15 @@
     "test": "jest",
     "prepublishOnly": "npm run build && npm test"
   },
-  "keywords": ["thread", "pool", "worker", "memoization", "dom", "concurrent"],
-  "author": "Your Name",
+  "keywords": [
+    "thread",
+    "pool",
+    "worker",
+    "memoization",
+    "dom",
+    "concurrent"
+  ],
+  "author": "Tahir Dibirov II",
   "license": "MIT",
   "dependencies": {
     "uuid": "^9.0.1"
