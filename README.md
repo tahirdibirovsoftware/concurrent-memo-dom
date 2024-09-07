@@ -9,7 +9,6 @@ Concurrent Memo DOM is a powerful browser library for offloading heavy computati
 - React hooks for easy integration with React applications
 - Decorators for use with Angular or non-framework projects
 - TypeScript support
-- Vite plugin for seamless integration with Vite projects
 
 ## Installation
 
@@ -116,24 +115,6 @@ Or when creating a ThreadPool:
 ```typescript
 const pool = new ThreadPool({ size: 4, enableMemoization: false });
 ```
-
-## Usage with Vite
-
-If you're using Vite in your project, you can use our Vite plugin to ensure smooth integration:
-
-1. Add the plugin to your Vite configuration:
-
-```javascript
-// vite.config.js
-import { defineConfig } from 'vite';
-import concurrentMemoDOMPlugin from 'concurrent-memo-dom/dist/vite-plugin-concurrent-memo-dom';
-
-export default defineConfig({
-  plugins: [concurrentMemoDOMPlugin()]
-});
-```
-
-This plugin will automatically handle the necessary configurations for Concurrent Memo DOM to work correctly with Vite.
 
 ## API
 

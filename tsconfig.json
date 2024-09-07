@@ -3,20 +3,20 @@
     "target": "ES2018",
     "module": "ESNext",
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
     "declaration": true,
     "outDir": "./dist",
-    "rootDir": ".",
-    "types": [
-      "react",
-      "node"
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "ES2018",
+      "DOM"
     ],
-    "skipLibCheck": true
+    "jsx": "react"
   },
   "include": [
-    "src",
-    "vite-plugin-concurrent-memo-dom.ts"
+    "src"
   ],
   "exclude": [
     "node_modules",

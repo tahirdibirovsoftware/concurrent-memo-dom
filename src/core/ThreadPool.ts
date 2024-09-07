@@ -1,7 +1,7 @@
 import { Thread } from './Thread';
-import { WorkerWrapper } from './worker';
+import { WorkerWrapper } from './WorkerWrapper';
 
-interface ThreadPoolOptions {
+export interface ThreadPoolOptions {
   size: number;
   enableMemoization?: boolean;
 }

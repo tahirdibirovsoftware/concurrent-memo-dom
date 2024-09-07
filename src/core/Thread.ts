@@ -1,4 +1,4 @@
-import { WorkerWrapper } from './worker';
+import { WorkerWrapper } from './WorkerWrapper';
 
 interface CacheEntry<T> {
   fnString: string;
