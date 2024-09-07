@@ -10,9 +10,9 @@
     "rootDir": ".",
     "types": [
       "react",
-      "node",
-      "vite/client"
-    ]
+      "node"
+    ],
+    "skipLibCheck": true
   },
   "include": [
     "src",
